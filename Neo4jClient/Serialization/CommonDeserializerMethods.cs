@@ -15,7 +15,6 @@ namespace Neo4jClient.Serialization
     {
         static readonly Regex DateRegex = new Regex(@"/Date\([-]?\d+([+-]\d+)?\)/");
         static readonly Regex DateTypeNameRegex = new Regex(@"(?<=(?<quote>['""])/)Date(?=\(.*?\)/\k<quote>)");
-        static readonly Regex DateTypeV5NameRegex = new Regex(@"(?<=(?<quote>['""])/)Lazy-ZonedDateTime(?=\(.*?\)/\k<quote>)");
 
         public static string RemoveResultsFromJson(string content)
         {
@@ -38,9 +37,7 @@ namespace Neo4jClient.Serialization
 
         public static string ReplaceAllDateInstancesWithNeoDates(string content)
         {
-            //{"columns":["Val"],"data":[[{"Id":1,"Created":"Lazy-ZonedDateTime{EpochSeconds:1577876400 Nanos:0 Zone:Z}"}]]}
             // Replace all /Date(1234+0200)/ instances with /NeoDate(1234+0200)/
-            content = DateTypeV5NameRegex.Replace(content, "NeoDate");
             return DateTypeNameRegex.Replace(content, "NeoDate");
         }
 

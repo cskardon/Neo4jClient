@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Neo4j.Driver;
 using Neo4jClient.Cypher;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json;
@@ -82,28 +84,29 @@ namespace Neo4jClient.Tests.Serialization
         [Fact]
         public async Task Issue464()
         {
-            var client = new BoltGraphClient("neo4j://localhost:7687", "neo4j", "neo4jneo4j");
+            var client = new BoltGraphClient("neo4j://localhost:7687", "neo4j", "neoneoneo");
             await client.ConnectAsync();
 	
+            // var query = client.Cypher
+            //     .Match("(n:Node {Id:2})")
+            //     //.With("{Id:1, Created: datetime('2020-01-01T11:00:00')} AS n")
+            //     .Return((n) => n.As<Node>());
+		          //
+            // var results2 = (await query.ResultsAsync).ToList();
+            // results2.First().Created.Year.Should().Be(2020);
+
             var otherQuery = client.Cypher
                 .Match("(n:Node {Id:2})")
                 //.With("{Id:1, Created: datetime('2020-01-01T11:00:00')} AS n")
                 .Return ((n) => new {Val = n.As<Node>()});
 
             var results = (await otherQuery.ResultsAsync).ToList();
-
-
-            var query = client.Cypher
-                .Match("(n:Node {Id:2})")
-                //.With("{Id:1, Created: datetime('2020-01-01T11:00:00')} AS n")
-                .Return((n) => n.As<Node>());
-		
-            var results2 = (await query.ResultsAsync).ToList();
+            results.First().Val.Created.Year.Should().Be(2020);
         }
 
         public class Node {
             public int Id {get;set;}
-            public DateTime Created { get;set;}
+            public ZonedDateTime Created { get;set;}
         }
         
         [Theory]
