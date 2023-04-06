@@ -27,7 +27,7 @@ namespace Neo4jClient.Serialization
 
         public override bool CanConvert(Type objectType)
         {
-            return typeof(ZonedDateTime) == objectType;
+            return typeof(ZonedDateTime) == objectType || typeof(Lazy<ZonedDateTime>)  == objectType;
         }
     }
 

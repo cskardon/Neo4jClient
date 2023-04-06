@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Neo4jClient.Cypher;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json;
@@ -76,7 +77,35 @@ namespace Neo4jClient.Tests.Serialization
         {
             CultureInfoSetupFixture.SetDeterministicCulture();
         }
-                    
+
+
+        [Fact]
+        public async Task Issue464()
+        {
+            var client = new BoltGraphClient("neo4j://localhost:7687", "neo4j", "neo4jneo4j");
+            await client.ConnectAsync();
+	
+            var otherQuery = client.Cypher
+                .Match("(n:Node {Id:2})")
+                //.With("{Id:1, Created: datetime('2020-01-01T11:00:00')} AS n")
+                .Return ((n) => new {Val = n.As<Node>()});
+
+            var results = (await otherQuery.ResultsAsync).ToList();
+
+
+            var query = client.Cypher
+                .Match("(n:Node {Id:2})")
+                //.With("{Id:1, Created: datetime('2020-01-01T11:00:00')} AS n")
+                .Return((n) => n.As<Node>());
+		
+            var results2 = (await query.ResultsAsync).ToList();
+        }
+
+        public class Node {
+            public int Id {get;set;}
+            public DateTime Created { get;set;}
+        }
+        
         [Theory]
         [MemberData(nameof(DateTimeOffsetCasesFactory.TestCases), MemberType = typeof(DateTimeOffsetCasesFactory))]
         public void DeserializeShouldPreserveOffsetValues(CypherResultMode resultMode, CypherResultFormat format, string contentFormat, string input, string expectedResult)

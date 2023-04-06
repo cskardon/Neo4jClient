@@ -408,7 +408,12 @@ namespace Neo4jClient
             if (typeof(TResult).IsAnonymous())
             {
                 foreach (var record in result)
-                    results.AddRange(deserializer.Deserialize(record.ParseAnonymous(this), false));
+                {
+                    var json = record.ParseAnonymous(this);
+                    var xx = deserializer.Deserialize(json, false);
+                    results.AddRange(xx);
+                    
+                }
             }
             else
             {
