@@ -55,6 +55,7 @@ namespace Neo4jClient
         private readonly string username;
         private readonly Uri uri;
         private readonly EncryptionLevel? encryptionLevel;
+        private readonly bool useDriverObjectMapping;
 
         /// <summary>
         ///     Creates a new instance of the <see cref="BoltGraphClient" />.
@@ -71,7 +72,17 @@ namespace Neo4jClient
         /// <param name="password">The password to connect to Neo4j with.</param>
         /// <param name="realm">The realm to connect to Neo4j with.</param>
         /// <param name="useDriverDateTypes">Configures the client to use the native driver date time types, instead of serialized datetime strings.</param>
-        public BoltGraphClient(Uri uri, IEnumerable<Uri> uris, string username = null, string password = null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false)
+        /// <param name="useDriverObjectMapping">Tells the client to use the Driver Object Mapper instead of the default one.</param>
+        public BoltGraphClient(
+            Uri uri, 
+            IEnumerable<Uri> uris, 
+            string username = null, 
+            string password = null, 
+            string realm = null, 
+            EncryptionLevel? encryptionLevel = null, 
+            bool serializeNullValues = false, 
+            bool useDriverDateTypes = false, 
+            bool useDriverObjectMapping = false)
         {
             var localUris = uris?.ToList();
             if (localUris != null && localUris.Any())
@@ -92,6 +103,7 @@ namespace Neo4jClient
             this.password = password;
             this.realm = realm;
             this.encryptionLevel = encryptionLevel;
+            this.useDriverObjectMapping = useDriverObjectMapping;
             PolicyFactory = new ExecutionPolicyFactory(this);
             UseDriverDateTypes = useDriverDateTypes;
 
@@ -113,24 +125,24 @@ namespace Neo4jClient
             transactionManager = new BoltTransactionManager(this);
         }
 
-        public BoltGraphClient(Uri uri, string username = null, string password = null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false)
-            : this(uri, null, username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes)
+        public BoltGraphClient(Uri uri, string username = null, string password = null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false, bool useDriverObjectMapping = false)
+            : this(uri, null, username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes, useDriverObjectMapping)
         { }
 
-        public BoltGraphClient(IEnumerable<string> uris, string username = null, string password = null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false)
-            : this(new Uri("neo4j://virtual.neo4j.uri"), uris?.Select(UriCreator.From).ToList(), username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes)
+        public BoltGraphClient(IEnumerable<string> uris, string username = null, string password = null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false, bool useDriverObjectMapping = false)
+            : this(new Uri("neo4j://virtual.neo4j.uri"), uris?.Select(UriCreator.From).ToList(), username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes, useDriverObjectMapping)
         { }
 
-        public BoltGraphClient(string uri, IEnumerable<string> uris, string username = null, string password = null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false)
-        : this(new Uri(uri), uris?.Select(UriCreator.From).ToList(), username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes)
+        public BoltGraphClient(string uri, IEnumerable<string> uris, string username = null, string password = null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false, bool useDriverObjectMapping = false)
+        : this(new Uri(uri), uris?.Select(UriCreator.From).ToList(), username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes, useDriverObjectMapping)
         {}
 
-        public BoltGraphClient(string uri, string username = null, string password= null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false)
-            : this(new Uri(uri), username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes)
+        public BoltGraphClient(string uri, string username = null, string password= null, string realm = null, EncryptionLevel? encryptionLevel = null, bool serializeNullValues = false, bool useDriverDateTypes = false, bool useDriverObjectMapping = false)
+            : this(new Uri(uri), username, password, realm, encryptionLevel, serializeNullValues, useDriverDateTypes, useDriverObjectMapping)
         { }
 
-        public BoltGraphClient(IDriver driver, bool useDriverDateTypes = false)
-            : this(new Uri("neo4j://Neo4j-Driver-Does-Not-Supply-This/"), null, null, null, null, false, useDriverDateTypes)
+        public BoltGraphClient(IDriver driver, bool useDriverDateTypes = false, bool useDriverObjectMapping = false)
+            : this(new Uri("neo4j://Neo4j-Driver-Does-Not-Supply-This/"), null, null, null, null, false, useDriverDateTypes, useDriverObjectMapping)
         {
             Driver = driver;
         }
@@ -378,12 +390,9 @@ namespace Neo4jClient
 
                     results = ParseResults<TResult>(result, query);
 
-                    if (session != null)
-                    {
-                        lastBookmark = session.LastBookmark;
-                        lastBookmarks = session.LastBookmarks;
-                        await session.CloseAsync().ConfigureAwait(false);
-                    }
+                    lastBookmark = session.LastBookmark;
+                    lastBookmarks = session.LastBookmarks;
+                    await session.CloseAsync().ConfigureAwait(false);
                 }
             }
             catch (AggregateException aggregateException)
@@ -402,6 +411,16 @@ namespace Neo4jClient
         }
 
         private List<TResult> ParseResults<TResult>(IEnumerable<IRecord> result, CypherQuery query)
+        {
+            return useDriverObjectMapping ? ParseResultsUsingDriverObjectMapper<TResult>(result, query) : ParseResultsUsingDefaultSerializer<TResult>(result, query);
+        }
+
+        private List<TResult> ParseResultsUsingDriverObjectMapper<TResult>(IEnumerable<IRecord> result, CypherQuery query)
+        {
+            throw new NotImplementedException("Not here yet!");
+        }
+        
+        private List<TResult> ParseResultsUsingDefaultSerializer<TResult>(IEnumerable<IRecord> result, CypherQuery query)
         {
             var deserializer = new CypherJsonDeserializer<TResult>(this, query.ResultMode, query.ResultFormat, false, true);
             var results = new List<TResult>();

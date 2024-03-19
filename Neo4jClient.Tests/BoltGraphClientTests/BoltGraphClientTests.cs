@@ -131,6 +131,12 @@ namespace Neo4jClient.Tests.BoltGraphClientTests
         }
 
         [Fact]
+        public async Task BoltGraphClientUsesTheBoltObjectMapperWhenConfiguredTo()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
         //Issue from https://github.com/DotNet4Neo4j/Neo4jClient/issues/385
         public async Task SerializerShouldTakeIntoAccountTheContractResolverProvided()
         {

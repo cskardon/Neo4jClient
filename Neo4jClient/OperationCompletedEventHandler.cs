@@ -12,7 +12,7 @@ namespace Neo4jClient
     {
         public string Database { get; set; }
         public string Identifier { get; set; }
-        [Obsolete("Replaced with 'LastBookmarks' will be removed in the next version.")]
+        [Obsolete("Replaced with 'LastBookmarks' will be removed in the next major version.")]
         public Bookmark LastBookmark { get; set; }
         public Bookmarks LastBookmarks { get; set; }
         public string QueryText { get; set; }

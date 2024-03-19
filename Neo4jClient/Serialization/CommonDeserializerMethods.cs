@@ -348,7 +348,7 @@ namespace Neo4jClient.Serialization
         {
             if (context.JsonContractResolver is CamelCasePropertyNamesContractResolver)
             {
-                var camel = new Func<string, string>(name => string.Format("{0}{1}", name.Substring(0,1).ToLowerInvariant(), name.Substring(1, name.Length-1)));
+                var camel = new Func<string, string>(name => $"{name.Substring(0, 1).ToLowerInvariant()}{name.Substring(1, name.Length - 1)}");
                 return properties.Select(x => new { Key = camel(x.Key), x.Value }).ToDictionary(x => x.Key, x => x.Value);    
             }
             return properties;
@@ -374,7 +374,7 @@ namespace Neo4jClient.Serialization
                 }
                 catch (InvalidOperationException ex)
                 {
-                    throw new InvalidOperationException(string.Format("While trying to map some JSON into an object of type {0}, we failed to find an expected property ({1}) in the JSON at path {2}.\r\n\r\nThe JSON block for this token was:\r\n\r\n{3}",
+                    throw new InvalidOperationException(string.Format($"While trying to map some JSON into an object of type {{0}}, we failed to find an expected property ({{1}}) in the JSON at path {{2}}.{Environment.NewLine}{Environment.NewLine}The JSON block for this token was:{Environment.NewLine}{Environment.NewLine}1{{3}}",
                         objType.FullName,
                         propertyName,
                         parentJsonToken.Path,
