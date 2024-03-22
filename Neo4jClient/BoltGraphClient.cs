@@ -55,7 +55,7 @@ namespace Neo4jClient
         private readonly string username;
         private readonly Uri uri;
         private readonly EncryptionLevel? encryptionLevel;
-        private readonly bool useDriverObjectMapping;
+        public bool UseDriverObjectMapping { get; }
 
         /// <summary>
         ///     Creates a new instance of the <see cref="BoltGraphClient" />.
@@ -103,7 +103,7 @@ namespace Neo4jClient
             this.password = password;
             this.realm = realm;
             this.encryptionLevel = encryptionLevel;
-            this.useDriverObjectMapping = useDriverObjectMapping;
+            UseDriverObjectMapping = useDriverObjectMapping;
             PolicyFactory = new ExecutionPolicyFactory(this);
             UseDriverDateTypes = useDriverDateTypes;
 
@@ -146,6 +146,7 @@ namespace Neo4jClient
         {
             Driver = driver;
         }
+
 
         /// <summary>
         /// This is the <see cref="IDriver"/> instance used internally for Bolt calls. 
@@ -412,7 +413,7 @@ namespace Neo4jClient
 
         private List<TResult> ParseResults<TResult>(IEnumerable<IRecord> result, CypherQuery query)
         {
-            return useDriverObjectMapping ? ParseResultsUsingDriverObjectMapper<TResult>(result, query) : ParseResultsUsingDefaultSerializer<TResult>(result, query);
+            return UseDriverObjectMapping ? ParseResultsUsingDriverObjectMapper<TResult>(result, query) : ParseResultsUsingDefaultSerializer<TResult>(result, query);
         }
 
         private List<TResult> ParseResultsUsingDriverObjectMapper<TResult>(IEnumerable<IRecord> result, CypherQuery query)

@@ -131,9 +131,22 @@ namespace Neo4jClient.Tests.BoltGraphClientTests
         }
 
         [Fact]
-        public async Task BoltGraphClientUsesTheBoltObjectMapperWhenConfiguredTo()
+        public void BoltGraphClientActuallyUsesTheMapper()
         {
             throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void BoltGraphClientUsesTheBoltObjectMapperWhenConfiguredTo()
+        {
+            var mockSession = new Mock<IAsyncSession>();
+            mockSession.Setup(s => s.RunAsync("CALL dbms.components()", null)).Returns(Task.FromResult<IResultCursor>(new ServerInfo()));
+
+            var mockDriver = new Mock<IDriver>();
+            mockDriver.Setup(d => d.AsyncSession(It.IsAny<Action<SessionConfigBuilder>>())).Returns(mockSession.Object);
+
+            var bgc = new BoltGraphClient(mockDriver.Object, useDriverObjectMapping:true);
+            bgc.UseDriverObjectMapping.Should().BeTrue();
         }
 
         [Fact]
