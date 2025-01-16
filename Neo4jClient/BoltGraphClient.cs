@@ -475,6 +475,8 @@ namespace Neo4jClient
                     executionContext.Complete(query, session.LastBookmark, session.LastBookmarks, new QueryStats(summary.Counters));
                 }
                 else executionContext.Complete(query, session.LastBookmark, session.LastBookmarks);
+
+                await session.CloseAsync();
             }
         }
 
