@@ -367,7 +367,6 @@ namespace Neo4jClient
                 else
                 {
                     var session = Driver.AsyncSession(ServerVersion, query.Database, query.IsWrite, query.Bookmarks);
-
                     async Task<List<IRecord>> Records(IAsyncQueryRunner work)
                     {
                         var cursor = await work.RunAsync(query, this).ConfigureAwait(false);
@@ -404,7 +403,7 @@ namespace Neo4jClient
             context.Complete(query, lastBookmark, lastBookmarks, results.Count, stats);
             return results;
         }
-
+        
         private List<TResult> ParseResults<TResult>(IEnumerable<IRecord> result, CypherQuery query)
         {
             var deserializer = new CypherJsonDeserializer<TResult>(this, query.ResultMode, query.ResultFormat, false, true);
@@ -476,7 +475,7 @@ namespace Neo4jClient
                 }
                 else executionContext.Complete(query, session.LastBookmark, session.LastBookmarks);
 
-                await session.CloseAsync();
+                await session.CloseAsync().ConfigureAwait(false);
             }
         }
 
