@@ -375,9 +375,16 @@ namespace Neo4jClient
                         return output;
                     }
 
+                    void Config(TransactionConfigBuilder config)
+                    {
+                        if (query.MaxExecutionTime != null)
+                            config.WithTimeout(TimeSpan.FromMilliseconds((double) query.MaxExecutionTime));
+                    }
+
                     var result = query.IsWrite 
-                        ? await session.ExecuteWriteAsync(Records).ConfigureAwait(false)
-                        : await session.ExecuteReadAsync(Records).ConfigureAwait(false);
+                        ? await session.ExecuteWriteAsync(Records, Config ).ConfigureAwait(false)
+                        : await session.ExecuteReadAsync(Records, Config).ConfigureAwait(false);
+
 
                     results = ParseResults<TResult>(result, query);
 
@@ -461,12 +468,18 @@ namespace Neo4jClient
             }
             else
             {
+                void Config(TransactionConfigBuilder config)
+                {
+                    if (query.MaxExecutionTime != null)
+                        config.WithTimeout(TimeSpan.FromMilliseconds((double) query.MaxExecutionTime));
+                }
+
                 var session = Driver.AsyncSession(ServerVersion, query.Database, query.IsWrite, query.Bookmarks);
                 IResultCursor cursor;
                 if (query.IsWrite)
-                    cursor = await session.WriteTransactionAsync(s => s.RunAsync(query, this)).ConfigureAwait(false);
+                    cursor = await session.ExecuteWriteAsync(s => s.RunAsync(query, this), Config).ConfigureAwait(false);
                 else
-                    cursor = await session.ReadTransactionAsync(s => s.RunAsync(query, this)).ConfigureAwait(false);
+                    cursor = await session.ExecuteReadAsync(s => s.RunAsync(query, this), Config).ConfigureAwait(false);
 
                 if (query.IncludeQueryStats)
                 {
